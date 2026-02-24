@@ -14,7 +14,7 @@ from telegram.ext import (
 
 # ---------------- LOGGING ----------------
 logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    format="%(asctime)s - %(levelname)s - %(message)s",
     level=logging.INFO
 )
 
@@ -38,10 +38,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ["Contact to buy"]
     ]
 
-    reply_markup = ReplyKeyboardMarkup(
-        keyboard,
-        resize_keyboard=True
-    )
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
     await update.message.reply_text(
         INVITE_MESSAGE,
@@ -54,17 +51,14 @@ async def menu_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
 
     if text == "Invite Code":
-        await update.message.reply_text(
-            INVITE_MESSAGE,
-            parse_mode="HTML"
-        )
+        await update.message.reply_text(INVITE_MESSAGE, parse_mode="HTML")
 
     elif text == "Contact to buy":
         await update.message.reply_text(CONTACT_MESSAGE)
 
 
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
-    logging.error(msg="Exception while handling update:", exc_info=context.error)
+    logging.error("Telegram error:", exc_info=context.error)
 
 
 # ---------------- TELEGRAM APP ----------------
@@ -87,9 +81,9 @@ def run_web():
     web_app.run(host="0.0.0.0", port=port)
 
 
-# ---------------- RUN TELEGRAM BOT ----------------
+# ---------------- RUN BOT ----------------
 def run_bot():
-    tg_app.run_polling()
+    tg_app.run_polling(drop_pending_updates=True)
 
 
 # ---------------- MAIN ----------------
