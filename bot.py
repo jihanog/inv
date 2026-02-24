@@ -2,27 +2,19 @@ import os
 import logging
 from threading import Thread
 from flask import Flask
-
-from telegram import Update, ReplyKeyboardMarkup
-from telegram.ext import (
-    ApplicationBuilder,
-    CommandHandler,
-    MessageHandler,
-    ContextTypes,
-    filters
-)
+import telebot
+from telebot.types import ReplyKeyboardMarkup
 
 # ---------------- LOGGING ----------------
-logging.basicConfig(
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    level=logging.INFO
-)
+logging.basicConfig(level=logging.INFO)
 
 # ---------------- TOKEN ----------------
 TOKEN = os.getenv("BOT_TOKEN")
 
 if not TOKEN:
     raise ValueError("BOT_TOKEN environment variable not set")
+
+bot = telebot.TeleBot(TOKEN, parse_mode="HTML")
 
 # ---------------- MESSAGES ----------------
 INVITE_MESSAGE = """Invite Code: <code>ADZ3U</code>
@@ -31,42 +23,34 @@ INVITE_MESSAGE = """Invite Code: <code>ADZ3U</code>
 
 CONTACT_MESSAGE = "Contact to buy:\nhttps://t.me/jihan_og"
 
-# ---------------- TELEGRAM HANDLERS ----------------
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keyboard = [
-        ["Invite Code"],
-        ["Contact to buy"]
-    ]
+# ---------------- KEYBOARD ----------------
+def main_keyboard():
+    markup = ReplyKeyboardMarkup(resize_keyboard=True)
+    markup.row("Invite Code")
+    markup.row("Contact to buy")
+    return markup
 
-    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
-    await update.message.reply_text(
+# ---------------- COMMANDS ----------------
+@bot.message_handler(commands=['start'])
+def start(message):
+    bot.send_message(
+        message.chat.id,
         INVITE_MESSAGE,
-        reply_markup=reply_markup,
-        parse_mode="HTML"
+        reply_markup=main_keyboard()
     )
 
 
-async def menu_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
+@bot.message_handler(func=lambda message: True)
+def menu_handler(message):
+    text = message.text
 
     if text == "Invite Code":
-        await update.message.reply_text(INVITE_MESSAGE, parse_mode="HTML")
+        bot.send_message(message.chat.id, INVITE_MESSAGE)
 
     elif text == "Contact to buy":
-        await update.message.reply_text(CONTACT_MESSAGE)
+        bot.send_message(message.chat.id, CONTACT_MESSAGE)
 
-
-async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
-    logging.error("Telegram error:", exc_info=context.error)
-
-
-# ---------------- TELEGRAM APP ----------------
-tg_app = ApplicationBuilder().token(TOKEN).build()
-
-tg_app.add_handler(CommandHandler("start", start))
-tg_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, menu_handler))
-tg_app.add_error_handler(error_handler)
 
 # ---------------- FLASK WEB SERVER ----------------
 web_app = Flask(__name__)
@@ -83,7 +67,8 @@ def run_web():
 
 # ---------------- RUN BOT ----------------
 def run_bot():
-    tg_app.run_polling(drop_pending_updates=True)
+    logging.info("Bot polling started...")
+    bot.infinity_polling(skip_pending=True)
 
 
 # ---------------- MAIN ----------------
