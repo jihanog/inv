@@ -3,7 +3,6 @@ import logging
 from threading import Thread
 from flask import Flask
 import telebot
-from telebot.types import ReplyKeyboardMarkup
 
 # ---------------- LOGGING ----------------
 logging.basicConfig(level=logging.INFO)
@@ -17,39 +16,55 @@ if not TOKEN:
 bot = telebot.TeleBot(TOKEN, parse_mode="HTML")
 
 # ---------------- MESSAGES ----------------
-INVITE_MESSAGE = """Invite Code: <code>ADZ3U</code>
-🔗 Link: https://ttier.mov/register?i=ADZ3U
+PACKAGES_MESSAGE = """
+⭐Mixed PACKAGES ⭐
+
+350+ Videos — $6
+750+ Videos — $11
+1550+ Videos — $21
+5050+ Videos — $71
+8050+ Videos — $101
+Custom Plans available
+
+💳 PAYMENT OPTIONS 
+
+Crypto (BTC, ETH, USDT & more) | Binance Pay | PayPal | Visa / Mastercard | TON (Telegram Wallet).
+
+>> SINGLE CATEGORIES AVAILABLE <<
+
+Choose a plan And Payment Method.
 """
 
-CONTACT_MESSAGE = "Contact to buy:\nhttps://t.me/jihan_og"
-
-# ---------------- KEYBOARD ----------------
-def main_keyboard():
-    markup = ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.row("Invite Code")
-    markup.row("Contact to buy")
-    return markup
+HELP_MESSAGE = "Hii 👋 How can I help you"
 
 
-# ---------------- COMMANDS ----------------
-@bot.message_handler(commands=['start'])
-def start(message):
-    bot.send_message(
-        message.chat.id,
-        INVITE_MESSAGE,
-        reply_markup=main_keyboard()
-    )
-
-
+# ---------------- KEYWORD HANDLER ----------------
 @bot.message_handler(func=lambda message: True)
-def menu_handler(message):
-    text = message.text
+def keyword_reply(message):
+    text = message.text.lower()
 
-    if text == "Invite Code":
-        bot.send_message(message.chat.id, INVITE_MESSAGE)
+    buy_keywords = [
+        "i want to buy",
+        "buy",
+        "buy videos",
+        "price",
+        "how to buy",
+        "videos price",
+        "plan",
+        "packages"
+    ]
 
-    elif text == "Contact to buy":
-        bot.send_message(message.chat.id, CONTACT_MESSAGE)
+    help_keywords = [
+        "i need help",
+        "help",
+        "support"
+    ]
+
+    if any(word in text for word in buy_keywords):
+        bot.send_message(message.chat.id, PACKAGES_MESSAGE)
+
+    elif any(word in text for word in help_keywords):
+        bot.send_message(message.chat.id, HELP_MESSAGE)
 
 
 # ---------------- FLASK WEB SERVER ----------------
@@ -74,5 +89,4 @@ def run_bot():
 # ---------------- MAIN ----------------
 if __name__ == "__main__":
     Thread(target=run_bot).start()
-
     run_web()
