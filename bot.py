@@ -4,20 +4,18 @@ from threading import Thread
 from flask import Flask
 import telebot
 
-# ---------------- LOGGING ----------------
 logging.basicConfig(level=logging.INFO)
 
-# ---------------- TOKEN ----------------
 TOKEN = os.getenv("BOT_TOKEN")
 
 if not TOKEN:
     raise ValueError("BOT_TOKEN environment variable not set")
 
-bot = telebot.TeleBot(TOKEN, parse_mode="HTML")
+bot = telebot.TeleBot(TOKEN)
 
 # ---------------- MESSAGES ----------------
 PACKAGES_MESSAGE = """
-⭐Mixed PACKAGES ⭐
+⭐Mixed CP PACKAGES ⭐
 
 350+ Videos — $6
 750+ Videos — $11
@@ -26,7 +24,7 @@ PACKAGES_MESSAGE = """
 8050+ Videos — $101
 Custom Plans available
 
-💳 PAYMENT OPTIONS 
+💳 PAYMENT OPTIONS
 
 Crypto (BTC, ETH, USDT & more) | Binance Pay | PayPal | Visa / Mastercard | TON (Telegram Wallet).
 
@@ -41,33 +39,30 @@ HELP_MESSAGE = "Hii 👋 How can I help you"
 # ---------------- KEYWORD HANDLER ----------------
 @bot.message_handler(func=lambda message: True)
 def keyword_reply(message):
+
+    if not message.text:
+        return
+
     text = message.text.lower()
 
-    buy_keywords = [
-        "i want to buy",
-        "buy",
-        "buy videos",
-        "price",
-        "how to buy",
-        "videos price",
-        "plan",
-        "packages"
-    ]
-
-    help_keywords = [
-        "i need help",
-        "help",
-        "support"
-    ]
-
-    if any(word in text for word in buy_keywords):
+    # BUY KEYWORDS
+    if (
+        "buy" in text
+        or "price" in text
+        or "videos" in text
+        or "package" in text
+        or "plan" in text
+    ):
         bot.send_message(message.chat.id, PACKAGES_MESSAGE)
+        return
 
-    elif any(word in text for word in help_keywords):
+    # HELP KEYWORDS
+    if "help" in text:
         bot.send_message(message.chat.id, HELP_MESSAGE)
+        return
 
 
-# ---------------- FLASK WEB SERVER ----------------
+# ---------------- FLASK ----------------
 web_app = Flask(__name__)
 
 @web_app.route("/")
@@ -80,9 +75,8 @@ def run_web():
     web_app.run(host="0.0.0.0", port=port)
 
 
-# ---------------- RUN BOT ----------------
+# ---------------- BOT ----------------
 def run_bot():
-    logging.info("Bot polling started...")
     bot.infinity_polling(skip_pending=True)
 
 
